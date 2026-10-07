@@ -289,6 +289,8 @@ footer h2.wmh{font-size:0;line-height:0;margin:10px auto 18px;width:min(88vw,760
 
 /* ===== entrada con sonido ===== */
 #gate{display:none}
+.rose-hold #rose .d{animation:none;stroke-dashoffset:1}
+.rose-hold #rose .nd{visibility:hidden}
 .gate-on{overflow:hidden}
 .gate-on #gate{display:flex}
 #gate{position:fixed;inset:0;z-index:200;flex-direction:column;align-items:center;justify-content:flex-start;gap:clamp(14px,3.2dvh,28px);padding:max(20px,env(safe-area-inset-top)) max(20px,env(safe-area-inset-right)) max(20px,env(safe-area-inset-bottom)) max(20px,env(safe-area-inset-left));background:radial-gradient(720px 520px at 50% 38%,rgba(163,38,42,.5),transparent 72%),radial-gradient(1200px 1000px at 50% 50%,transparent 55%,rgba(0,0,0,.6) 100%),#0d0d0d;color:#fff;text-align:center;overflow-y:auto;transition:opacity .6s ease,visibility .6s;font-family:var(--fm)}
@@ -341,7 +343,7 @@ footer h2.wmh{font-size:0;line-height:0;margin:10px auto 18px;width:min(88vw,760
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:image" content="https://www.blackrootshs.com/og-image.jpg">
 </head><body>
-<script>try{if(!sessionStorage.getItem('br_gate'))document.documentElement.classList.add('gate-on')}catch(e){document.documentElement.classList.add('gate-on')}</script>
+<script>try{if(!sessionStorage.getItem('br_gate'))document.documentElement.classList.add('gate-on','rose-hold')}catch(e){document.documentElement.classList.add('gate-on','rose-hold')}</script>
 <div id="gate" role="dialog" aria-modal="true" aria-labelledby="gt">
 <svg class="gl" viewBox="0 0 200 200" aria-hidden="true"><use href="#lgk"/></svg>
 <svg class="mach" viewBox="0 0 320 260" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
@@ -368,7 +370,6 @@ footer h2.wmh{font-size:0;line-height:0;margin:10px auto 18px;width:min(88vw,760
 <p class="gtip">Con sonido se siente mejor · Lo apagas cuando quieras</p></div>
 </div>
 <audio id="aamb" src="/audio/ambiente.mp3" loop preload="none" playsinline></audio>
-<audio id="abz" src="/audio/maquina.mp3" preload="none" playsinline></audio>
 <svg width="0" height="0" style="position:absolute" aria-hidden="true"><symbol id="mach" viewBox="0 0 320 260" fill="none" stroke="currentColor" stroke-width="20" stroke-linecap="round" stroke-linejoin="round"><path d="M50 160h200"/><path d="M68 160V92"/><path d="M114 150V104h34v46M174 150V104h34v46" stroke="var(--mr,#d9534f)"/><path d="M84 70h150q34 0 36 38"/><path d="M250 170l46 66"/></symbol></svg>
 
 <svg width="0" height="0" style="position:absolute" aria-hidden="true"><defs>
@@ -578,17 +579,18 @@ f.addEventListener('pointermove',e=>{const r=w.getBoundingClientRect();w.style.s
 f.addEventListener('pointerleave',()=>w.style.setProperty('--lean',0))})();
 </script><script>
 (function(){
-const H=document.documentElement,g=document.getElementById('gate'),amb=document.getElementById('aamb'),bz=document.getElementById('abz'),btn=document.getElementById('snd');
+const H=document.documentElement,g=document.getElementById('gate'),amb=document.getElementById('aamb'),btn=document.getElementById('snd');
 if(!g||!amb||!btn)return;
 const RM=matchMedia('(prefers-reduced-motion: reduce)').matches;
 const ss={get(k){try{return sessionStorage.getItem(k)}catch(e){return null}},set(k,v){try{sessionStorage.setItem(k,v)}catch(e){}}};
 let on=false,ft=0;const TARGET=.75;
 function setUI(){btn.setAttribute('aria-pressed',on);btn.setAttribute('aria-label',on?'Silenciar la música':'Activar la música');btn.title=on?'Silenciar la música':'Activar la música'}
 function fade(to,ms,done){clearInterval(ft);let v;try{v=amb.volume}catch(e){v=1}const t0=performance.now(),from=v;if(RM||ms<=0){try{amb.volume=to}catch(e){}done&&done();return}ft=setInterval(()=>{const k=Math.min(1,(performance.now()-t0)/ms);try{amb.volume=from+(to-from)*k}catch(e){}if(k>=1){clearInterval(ft);done&&done()}},40)}
-async function start(withBuzz){try{try{amb.volume=0}catch(e){}if(withBuzz){try{bz.currentTime=0;bz.volume=.9}catch(e){}bz.play().catch(()=>{})}await amb.play();on=true;ss.set('br_snd','1');setUI();fade(TARGET,withBuzz?2600:900)}catch(e){on=false;setUI()}}
+async function start(withBuzz){try{try{amb.volume=0}catch(e){}await amb.play();on=true;ss.set('br_snd','1');setUI();fade(TARGET,withBuzz?2200:900)}catch(e){on=false;setUI()}}
 function stop(){ss.set('br_snd','0');on=false;setUI();fade(0,500,()=>amb.pause())}
 btn.addEventListener('click',()=>{on?stop():start(false)});
-function closeGate(){g.classList.add('out');ss.set('br_gate','1');setTimeout(()=>{H.classList.remove('gate-on');g.style.display='none';try{document.activeElement&&document.activeElement.blur()}catch(e){}},RM?0:650)}
+function releaseRose(){H.classList.remove('rose-hold');try{const r=document.getElementById('rose');if(r&&r.setCurrentTime){r.setCurrentTime(0);r.unpauseAnimations&&r.unpauseAnimations()}}catch(e){}}
+function closeGate(){releaseRose();g.classList.add('out');ss.set('br_gate','1');setTimeout(()=>{H.classList.remove('gate-on');g.style.display='none';try{document.activeElement&&document.activeElement.blur()}catch(e){}},RM?0:650)}
 function enter(sound){if(g.dataset.done)return;g.dataset.done=1;
  if(sound){g.classList.add('go');start(true);setTimeout(closeGate,RM?200:1500)}
  else{ss.set('br_snd','0');closeGate()}}
